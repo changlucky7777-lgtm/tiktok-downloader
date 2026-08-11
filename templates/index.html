@@ -21,10 +21,10 @@
         <h2>🚀 UV Tiktok Download Pro</h2>
         <form method="POST">
             <textarea name="url" placeholder="Dán 1 hoặc nhiều link TikTok tại đây..." required></textarea>
+            <!-- Đã bỏ option Tải Ảnh Slide -->
             <select name="type" style="width:100%; padding:10px; margin: 10px 0;">
                 <option value="video">Tải Video Không Logo</option>
                 <option value="audio">Tải Nhạc Nền (MP3)</option>
-                <option value="images">Tải Ảnh Slide</option>
             </select>
             <button type="submit">Xử Lý Ngay</button>
         </form>
@@ -55,7 +55,6 @@
             checkboxes = document.getElementsByClassName('file-checkbox');
             for(var i=0; i<checkboxes.length; i++) {
                 if(checkboxes[i].checked) {
-                    // Tạo thẻ a ẩn và click để tải
                     var link = document.createElement('a');
                     link.href = checkboxes[i].value;
                     link.download = '';

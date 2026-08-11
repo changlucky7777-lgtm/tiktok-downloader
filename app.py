@@ -5,7 +5,6 @@ import glob
 
 app = Flask(__name__)
 
-# Sử dụng đường dẫn tuyệt đối cho thư mục downloads để tránh lỗi tìm file
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DOWNLOAD_FOLDER = os.path.join(BASE_DIR, 'downloads')
 
@@ -25,7 +24,7 @@ def index():
         downloaded_files = []
         
         ydl_opts = {
-            'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(id)s.%(ext)s'),
+            'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(id)s_%(autonumber)s.%(ext)s'),
             'quiet': True,
         }
 
@@ -34,14 +33,20 @@ def index():
                 'format': 'bestaudio/best',
                 'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
             })
+        elif download_type == 'images':
+            # Cấu hình để ép tải tất cả ảnh từ bài đăng dạng slide
+            ydl_opts.update({
+                'format': 'all',
+            })
 
         for tiktok_url in urls:
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(tiktok_url, download=True)
+                    # Lấy ID của video/slide để quét tất cả file liên quan
+                    video_id = info.get('id', '')
+                    files = glob.glob(os.path.join(DOWNLOAD_FOLDER, f"{video_id}*"))
                     
-                    # Tìm tất cả file khớp với ID video vừa tải
-                    files = glob.glob(os.path.join(DOWNLOAD_FOLDER, f"{info['id']}*"))
                     for f in files:
                         base_name = os.path.basename(f)
                         if base_name not in downloaded_files:
@@ -50,9 +55,9 @@ def index():
                 print(f"Lỗi: {str(e)}")
         
         if not downloaded_files:
-            return render_template('index.html', error="Không thể tải video. Vui lòng kiểm tra lại link!")
+            return render_template('index.html', error="Không thể tải xuống. Vui lòng kiểm tra lại link hoặc định dạng!")
             
-        return render_template('index.html', success="Đã xong! Nhấn nút bên dưới để tải:", files=downloaded_files)
+        return render_template('index.html', success="Xử lý thành công! Nhấn tải từng file:", files=downloaded_files)
             
     return render_template('index.html')
 

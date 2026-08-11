@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Downloader Pro - Tải Hàng Loạt 1 Chạm</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; text-align: center; padding-top: 50px; }
+        .container { background: white; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0px 4px 12px rgba(0,0,0,0.1); width: 500px; text-align: left; }
+        h2 { color: #fe2c55; text-align: center; margin-bottom: 20px; }
+        label { font-weight: bold; font-size: 14px; color: #333; display: block; margin-bottom: 5px; }
+        textarea { width: 100%; height: 100px; padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; outline: none; resize: vertical; box-sizing: border-box; }
+        textarea:focus { border-color: #fe2c55; }
+        select { width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 15px; outline: none; box-sizing: border-box; }
+        .center-btn { text-align: center; }
+        button { padding: 12px 25px; font-size: 16px; background-color: #fe2c55; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:hover { background-color: #e0244a; }
+        .download-all-btn { background-color: #25f4ee; color: black; border: none; width: 100%; padding: 12px 25px; border-radius: 6px; font-weight: bold; margin-top: 15px; cursor: pointer; text-align: center; display: block; font-size: 16px; box-sizing: border-box; }
+        .download-all-btn:hover { background-color: #1edbd5; }
+        .error { color: #ff3b30; text-align: center; margin-top: 15px; }
+        .success { color: #34c759; text-align: center; margin-top: 15px; font-weight: bold; }
+        .hidden-links { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>TikTok Downloader Pro</h2>
+        <form method="POST">
+            <label>Dán danh sách link TikTok (Mỗi link một dòng):</label>
+            <textarea name="url" placeholder="https://www.tiktok.com/@user/video/...&#10;https://www.tiktok.com/@user/video/..." required></textarea>
+            
+            <label style="margin-top: 15px;">Chọn định dạng tải về:</label>
+            <select name="type">
+                <option value="video">Tải Video Không Logo (MP4)</option>
+                <option value="audio">Chỉ Tải Nhạc Nền Riêng (MP3)</option>
+            </select>
+            
+            <div class="center-btn">
+                <button type="submit">Bắt Đầu Xử Lý</button>
+            </div>
+        </form>
+        
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        
+        {% if files %}
+            <p class="success">{{ success }}</p>
+            <button type="button" class="download-all-btn" onclick="downloadAllFiles()">Tải Tất Cả Về Máy Ngay</button>
+            
+            <div class="hidden-links">
+                {% for f in files %}
+                    <a class="auto-download-link" href="/download?file={{ f }}" download>File {{ loop.index }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function downloadAllFiles() {
+            const links = document.querySelectorAll('.auto-download-link');
+            links.forEach((link, index) => {
+                setTimeout(() => {
+                    link.click();
+                }, index * 300);
+            });
+        }
+    </script>
+</body>
+</html>

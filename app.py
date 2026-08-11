@@ -17,17 +17,17 @@ def index():
         
         urls = [url.strip() for url in raw_urls.splitlines() if url.strip()]
         if not urls:
-            return render_template('index.html', error="Vui lòng nhập link!")
+            return render_template('index.html', error="Vui lòng nhập link TikTok!")
         
         downloaded_files = []
         
-        # Cấu hình yt-dlp đa năng
+        # Cấu hình chuyên cho TikTok
         ydl_opts = {
-            'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s_%(title)s.%(ext)s',
+            'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
             'quiet': True,
         }
 
-        # Nếu chọn audio
+        # Nếu tải nhạc nền
         if download_type == 'audio':
             ydl_opts.update({
                 'format': 'bestaudio/best',
@@ -39,20 +39,16 @@ def index():
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(tiktok_url, download=True)
                     
-                    # Thu thập file kết quả
-                    if download_type == 'audio':
-                        base_name = f"{info['id']}.mp3"
-                        downloaded_files.append(base_name)
-                    else:
-                        # Tự động lấy file (video hoặc ảnh slide)
-                        files = glob.glob(f"{DOWNLOAD_FOLDER}/{info['id']}*")
-                        for f in files:
-                            downloaded_files.append(os.path.basename(f))
-                            
+                    # Thu thập file
+                    files = glob.glob(f"{DOWNLOAD_FOLDER}/{info['id']}*")
+                    for f in files:
+                        base_name = os.path.basename(f)
+                        if base_name not in downloaded_files:
+                            downloaded_files.append(base_name)
             except Exception as e:
-                print(f"Lỗi tải {tiktok_url}: {str(e)}")
+                print(f"Lỗi: {str(e)}")
         
-        return render_template('index.html', success="Đã xong! Nhấn nút để tải:", files=list(set(downloaded_files)))
+        return render_template('index.html', success="Đã xong! Nhấn nút để tải:", files=downloaded_files)
             
     return render_template('index.html')
 
@@ -63,4 +59,4 @@ def download_file():
     return send_file(file_path, as_attachment=True) if os.path.exists(file_path) else "Lỗi file!", 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

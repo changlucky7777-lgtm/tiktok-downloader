@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>UV Downloader Pro - TikTok</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; text-align: center; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: #fe2c55; }
+        textarea { width: 100%; height: 80px; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        select { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; }
+        button { width: 100%; padding: 12px; background: #fe2c55; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .download-all-btn { background: #25f4ee; color: black; margin-top: 10px; display: block; padding: 12px; border-radius: 6px; font-weight: bold; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>UV Downloader Pro</h2>
+        <form method="POST">
+            <textarea name="url" placeholder="Dán link TikTok tại đây..." required></textarea>
+            <select name="type">
+                <option value="video">Tải Video Không Logo</option>
+                <option value="audio">Tải Nhạc Nền (MP3)</option>
+                <option value="images">Tải Ảnh Slide</option>
+            </select>
+            <button type="submit">Xử Lý Ngay</button>
+        </form>
+        {% if files %}
+            <button class="download-all-btn" onclick="document.querySelectorAll('.auto-download-link').forEach(l=>l.click())">Tải Tất Cả Về Máy</button>
+            <div style="display:none;">
+                {% for f in files %} <a class="auto-download-link" href="/download?file={{ f }}" download>File</a> {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, send_file
 import yt_dlp
 import os
+import glob
 
 app = Flask(__name__)
 DOWNLOAD_FOLDER = 'downloads'
@@ -15,46 +16,43 @@ def index():
         download_type = request.form.get('type', 'video')
         
         urls = [url.strip() for url in raw_urls.splitlines() if url.strip()]
-        
         if not urls:
-            return render_template('index.html', error="Vui lòng nhập ít nhất một link TikTok!")
+            return render_template('index.html', error="Vui lòng nhập link!")
         
         downloaded_files = []
         
+        # Cấu hình yt-dlp đa năng
+        ydl_opts = {
+            'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s_%(title)s.%(ext)s',
+            'quiet': True,
+        }
+
+        # Nếu chọn audio
+        if download_type == 'audio':
+            ydl_opts.update({
+                'format': 'bestaudio/best',
+                'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
+            })
+
         for tiktok_url in urls:
             try:
-                if download_type == 'audio':
-                    ydl_opts = {
-                        'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
-                        'format': 'bestaudio/best',
-                        'postprocessors': [{
-                            'key': 'FFmpegExtractAudio',
-                            'preferredcodec': 'mp3',
-                            'preferredquality': '192',
-                        }],
-                    }
-                else:
-                    ydl_opts = {
-                        'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
-                    }
-                
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(tiktok_url, download=True)
-                    if download_type == 'audio':
-                        filename = os.path.join(DOWNLOAD_FOLDER, f"{info['id']}.mp3")
-                    else:
-                        filename = ydl.prepare_filename(info)
                     
-                    # Chỉ lấy tên file để hiển thị hoặc tải trực tiếp
-                    downloaded_files.append(os.path.basename(filename))
+                    # Thu thập file kết quả
+                    if download_type == 'audio':
+                        base_name = f"{info['id']}.mp3"
+                        downloaded_files.append(base_name)
+                    else:
+                        # Tự động lấy file (video hoặc ảnh slide)
+                        files = glob.glob(f"{DOWNLOAD_FOLDER}/{info['id']}*")
+                        for f in files:
+                            downloaded_files.append(os.path.basename(f))
+                            
             except Exception as e:
-                print(f"Lỗi khi tải link {tiktok_url}: {str(e)}")
+                print(f"Lỗi tải {tiktok_url}: {str(e)}")
         
-        if not downloaded_files:
-            return render_template('index.html', error="Không thể tải được video/âm thanh từ các link bạn cung cấp.")
-        
-        # Trả về danh sách các file đã tải xong để hiển thị nút tải riêng lẻ
-        return render_template('index.html', success="Xử lý thành công! Chọn file bên dưới để tải về:", files=downloaded_files)
+        return render_template('index.html', success="Đã xong! Nhấn nút để tải:", files=list(set(downloaded_files)))
             
     return render_template('index.html')
 
@@ -62,9 +60,7 @@ def index():
 def download_file():
     filename = request.args.get('file')
     file_path = os.path.join(DOWNLOAD_FOLDER, filename)
-    if filename and os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
-    return "Không tìm thấy file!", 404
+    return send_file(file_path, as_attachment=True) if os.path.exists(file_path) else "Lỗi file!", 404
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -4,7 +4,10 @@ import os
 import glob
 
 app = Flask(__name__)
-DOWNLOAD_FOLDER = 'downloads'
+
+# Sử dụng đường dẫn tuyệt đối cho thư mục downloads để tránh lỗi tìm file
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DOWNLOAD_FOLDER = os.path.join(BASE_DIR, 'downloads')
 
 if not os.path.exists(DOWNLOAD_FOLDER):
     os.makedirs(DOWNLOAD_FOLDER)
@@ -21,13 +24,11 @@ def index():
         
         downloaded_files = []
         
-        # Cấu hình chuyên cho TikTok
         ydl_opts = {
-            'outtmpl': f'{DOWNLOAD_FOLDER}/%(id)s.%(ext)s',
+            'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(id)s.%(ext)s'),
             'quiet': True,
         }
 
-        # Nếu tải nhạc nền
         if download_type == 'audio':
             ydl_opts.update({
                 'format': 'bestaudio/best',
@@ -39,8 +40,8 @@ def index():
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(tiktok_url, download=True)
                     
-                    # Thu thập file
-                    files = glob.glob(f"{DOWNLOAD_FOLDER}/{info['id']}*")
+                    # Tìm tất cả file khớp với ID video vừa tải
+                    files = glob.glob(os.path.join(DOWNLOAD_FOLDER, f"{info['id']}*"))
                     for f in files:
                         base_name = os.path.basename(f)
                         if base_name not in downloaded_files:
@@ -48,15 +49,23 @@ def index():
             except Exception as e:
                 print(f"Lỗi: {str(e)}")
         
-        return render_template('index.html', success="Đã xong! Nhấn nút để tải:", files=downloaded_files)
+        if not downloaded_files:
+            return render_template('index.html', error="Không thể tải video. Vui lòng kiểm tra lại link!")
+            
+        return render_template('index.html', success="Đã xong! Nhấn nút bên dưới để tải:", files=downloaded_files)
             
     return render_template('index.html')
 
 @app.route('/download')
 def download_file():
     filename = request.args.get('file')
+    if not filename:
+        return "Tên file không hợp lệ!", 400
+        
     file_path = os.path.join(DOWNLOAD_FOLDER, filename)
-    return send_file(file_path, as_attachment=True) if os.path.exists(file_path) else "Lỗi file!", 404
+    if os.path.exists(file_path):
+        return send_file(file_path, as_attachment=True)
+    return "Không tìm thấy file trên server!", 404
 
 if __name__ == '__main__':
     app.run()
